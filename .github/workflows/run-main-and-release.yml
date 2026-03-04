@@ -27,100 +27,100 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Create 频道模板 directory and populate template files
-  run: |
-    mkdir -p '频道模板'
+        run: |
+          mkdir -p '频道模板'
 
-    cat > '频道模板/CCTV.txt' << 'EOF'
-CCTV-1
-CCTV-2
-CCTV-3
-CCTV-4
-CCTV-5
-CCTV-5+
-CCTV-6
-CCTV-7
-CCTV-8
-CCTV-9
-CCTV-10
-CCTV-11
-CCTV-12
-CCTV-13
-CCTV-14
-CCTV-15
-CCTV-16
-CCTV-17
-CCTV-4中文国际
-CCTV-4欧洲
-CCTV-4美洲
-EOF
+          cat > '频道模板/CCTV.txt' << 'EOF'
+          CCTV-1
+          CCTV-2
+          CCTV-3
+          CCTV-4
+          CCTV-5
+          CCTV-5+
+          CCTV-6
+          CCTV-7
+          CCTV-8
+          CCTV-9
+          CCTV-10
+          CCTV-11
+          CCTV-12
+          CCTV-13
+          CCTV-14
+          CCTV-15
+          CCTV-16
+          CCTV-17
+          CCTV-4中文国际
+          CCTV-4欧洲
+          CCTV-4美洲
+          EOF
 
-    cat > '频道模板/主流卫视.txt' << 'EOF'
-湖南卫视
-浙江卫视
-江苏卫视
-东方卫视
-北京卫视
-广东卫视
-深圳卫视
-安徽卫视
-山东卫视
-天津卫视
-重庆卫视
-湖北卫视
-四川卫视
-河南卫视
-江西卫视
-辽宁卫视
-黑龙江卫视
-河北卫视
-山西卫视
-陕西卫视
-吉林卫视
-贵州卫视
-云南卫视
-广西卫视
-内蒙古卫视
-甘肃卫视
-青海卫视
-宁夏卫视
-新疆卫视
-海南卫视
-西藏卫视
-EOF
+          cat > '频道模板/主流卫视.txt' << 'EOF'
+          湖南卫视
+          浙江卫视
+          江苏卫视
+          东方卫视
+          北京卫视
+          广东卫视
+          深圳卫视
+          安徽卫视
+          山东卫视
+          天津卫视
+          重庆卫视
+          湖北卫视
+          四川卫视
+          河南卫视
+          江西卫视
+          辽宁卫视
+          黑龙江卫视
+          河北卫视
+          山西卫视
+          陕西卫视
+          吉林卫视
+          贵州卫视
+          云南卫视
+          广西卫视
+          内蒙古卫视
+          甘肃卫视
+          青海卫视
+          宁夏卫视
+          新疆卫视
+          海南卫视
+          西藏卫视
+          EOF
 
-    cat > '频道模板/地方频道.txt' << 'EOF'
-北京新闻
-北京影视
-北京生活
-上海新闻综合
-上海都市
-上海纪实
-广东珠江
-广东体育
-广东新闻
-深圳都市
-深圳财经
-深圳娱乐
-湖南经视
-湖南都市
-湖南电影
-浙江钱江
-浙江经济生活
-江苏城市
-江苏综艺
-山东齐鲁
-山东体育
-湖北经视
-湖北综合
-四川经济
-重庆新闻
-天津都市
-辽宁都市
-黑龙江都市
-河南都市
-江西都市
-EOF
-      
+          cat > '频道模板/地方频道.txt' << 'EOF'
+          北京新闻
+          北京影视
+          北京生活
+          上海新闻综合
+          上海都市
+          上海纪实
+          广东珠江
+          广东体育
+          广东新闻
+          深圳都市
+          深圳财经
+          深圳娱乐
+          湖南经视
+          湖南都市
+          湖南电影
+          浙江钱江
+          浙江经济生活
+          江苏城市
+          江苏综艺
+          山东齐鲁
+          山东体育
+          湖北经视
+          湖北综合
+          四川经济
+          重庆新闻
+          天津都市
+          辽宁都市
+          黑龙江都市
+          河南都市
+          江西都市
+          EOF
+
       - name: Run main.py
         run: python main.py
 
@@ -183,31 +183,4 @@ EOF
       - name: Upload ZIP to Release
         if: hashFiles('release.zip') != ''
         uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release.zip
-          asset_name: release.zip
-          asset_content_type: application/zip
-
-      - name: Upload TAR.GZ to Release
-        if: hashFiles('release.tar.gz') != ''
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release.tar.gz
-          asset_name: release.tar.gz
-          asset_content_type: application/gzip
-
-      - name: Upload as GitHub Artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-${{ steps.release_tag.outputs.tag }}
-          path: |
-            release.zip
-            release.tar.gz
-          retention-days: 30
+        
