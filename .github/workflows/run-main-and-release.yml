@@ -1,97 +1,47 @@
-# This workflow runs main.py, packages the generated output files into a zip, and publishes them as a GitHub Release asset.
-# 此工作流运行 main.py，将生成的输出文件打包为 zip，并发布为 GitHub Release 附件。
-
-name: Run main.py and Release Outputs
+name: Run Main and Release
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+  release:
+    types:
+      - created
 
 jobs:
-  run-and-release:
-    name: Run main.py, package outputs and publish release
+  build:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/checkout@v2
         with:
-          python-version: '3.x'
+          fetch-depth: 0
 
-      - name: Install Python dependencies
-        run: |
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          else
-            pip install requests beautifulsoup4 tenacity
-          fi
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
 
-      - name: Install ffmpeg
-        run: sudo apt-get install -y ffmpeg
+      - name: Install dependencies
+        run: npm install
 
-      - name: Generate release timestamp
-        run: echo "RUN_TIMESTAMP=$(date -u +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+      - name: Run tests
+        run: npm test
 
-      - name: Run main.py
-        run: python3 -u main.py
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      - name: Package output files into zip
-        run: |
-          FILES=()
-          for path in \
-            "iptv.txt" \
-            "iptv_speed.txt" \
-            "iptv_list.txt" \
-            "config/urls.txt" \
-            "unmatched_channels.txt"; do
-            if [ -e "$path" ]; then
-              FILES+=("$path")
-            fi
-          done
-          for dir in "地方频道" "频道模板"; do
-            if [ -d "$dir" ]; then
-              FILES+=("$dir")
-            fi
-          done
-          if [ ${#FILES[@]} -gt 0 ]; then
-            zip -r outputs.zip "${FILES[@]}"
-          else
-            echo "No output files found; creating empty placeholder zip."
-            echo "no output" > .no_output_placeholder.txt
-            zip outputs.zip .no_output_placeholder.txt
-          fi
-
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          files: | 
+            ./dist/*.zip
+            ./dist/*.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: release-${{ github.run_id }}-${{ github.run.number }}-${{ env.RUN_TIMESTAMP }}
-          release_name: Release ${{ github.run.id }}-${{ github.run.number }} (${{ env.RUN_TIMESTAMP }})
-          body: |
-            Automated release from run #${{ github.run.number }} (run id: ${{ github.run.id }}).
-            Generated at ${{ env.RUN_TIMESTAMP }} UTC.
-          draft: false
-          prerelease: false
-
-      - name: Upload zip to GitHub Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./outputs.zip
-          asset_name: outputs.zip
-          asset_content_type: application/zip
-
-      - name: Upload zip as Actions artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: outputs-${{ github.run.id }}-${{ github.run.number }}
-          path: outputs.zip
