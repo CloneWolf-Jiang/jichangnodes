@@ -4,9 +4,6 @@
 name: Run main.py and Release Outputs
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
@@ -75,10 +72,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: release-${{ github.run_id }}-${{ github.run_number }}-${{ env.RUN_TIMESTAMP }}
-          release_name: Release ${{ github.run_id }}-${{ github.run_number }} (${{ env.RUN_TIMESTAMP }})
+          tag_name: release-${{ github.run_id }}-${{ github.run.number }}-${{ env.RUN_TIMESTAMP }}
+          release_name: Release ${{ github.run.id }}-${{ github.run.number }} (${{ env.RUN_TIMESTAMP }})
           body: |
-            Automated release from run #${{ github.run_number }} (run id: ${{ github.run_id }}).
+            Automated release from run #${{ github.run.number }} (run id: ${{ github.run.id }}).
             Generated at ${{ env.RUN_TIMESTAMP }} UTC.
           draft: false
           prerelease: false
@@ -96,5 +93,5 @@ jobs:
       - name: Upload zip as Actions artifact
         uses: actions/upload-artifact@v4
         with:
-          name: outputs-${{ github.run_id }}-${{ github.run_number }}
+          name: outputs-${{ github.run.id }}-${{ github.run.number }}
           path: outputs.zip
