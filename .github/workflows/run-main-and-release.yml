@@ -1,67 +1,124 @@
-name: CI Workflow
+name: 测试main.py
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  run-and-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: '3.x'
 
-      - name: Install dependencies
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Run main.py
-        run: |
-          python main.py
+        run: python main.py
 
-      - name: Create package
+      - name: List generated files
         run: |
-          mkdir output
-          cp IPTV_list.txt output/
-          cp "地方频道" output/
-          cp "频道模板" output/
-          cp config output/
-          cp unmatched_channels.txt output/
-          tar -cvf package.tar.gz output/
-          zip -r package.zip output/
+          echo "=== Files in root ===" 
+          ls -lah *.txt 2>/dev/null || echo "No .txt files"
+          echo "=== Directories ===" 
+          ls -la | grep "^d" || echo "No directories"
 
-      - name: Create Release
+      - name: Create temporary release tag
+        id: release_tag
+        run: |
+          TAG="release-$(date +%Y%m%d-%H%M%S)"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Created tag: $TAG"
+
+      - name: Package files for ZIP
+        continue-on-error: true
+        run: |
+          mkdir -p release_output
+          cp -f iptv_list.txt release_output/ 2>/dev/null || echo "iptv_list.txt not found"
+          cp -f unmatched_channels.txt release_output/ 2>/dev/null || echo "unmatched_channels.txt not found"
+          cp -rf config release_output/ 2>/dev/null || echo "config directory not found"
+          cp -rf 地方频道 release_output/ 2>/dev/null || echo "地方频道 directory not found"
+          cp -rf 频道模板 release_output/ 2>/dev/null || echo "频道模板 directory not found"
+          cd release_output
+          zip -r ../release.zip . -q
+          cd ..
+          echo "ZIP package created: $(ls -lh release.zip | awk '{print $5}')"
+
+      - name: Package files for TAR.GZ
+        continue-on-error: true
+        run: |
+          mkdir -p release_output_tar
+          cp -f iptv_list.txt release_output_tar/ 2>/dev/null || echo "iptv_list.txt not found"
+          cp -f unmatched_channels.txt release_output_tar/ 2>/dev/null || echo "unmatched_channels.txt not found"
+          cp -rf config release_output_tar/ 2>/dev/null || echo "config directory not found"
+          cp -rf 地方频道 release_output_tar/ 2>/dev/null || echo "地方频道 directory not found"
+          cp -rf 频道模板 release_output_tar/ 2>/dev/null || echo "频道模板 directory not found"
+          tar -czf release.tar.gz -C release_output_tar . 2>/dev/null
+          echo "TAR.GZ package created: $(ls -lh release.tar.gz | awk '{print $5}')"
+
+      - name: Create GitHub Release
         id: create_release
-        uses: actions/github-script@v4
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          script: |
-            const response = await github.repos.createRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag_name: `release-${new Date().toISOString().split('T')[0]}`,
-              name: `Release - ${new Date().toISOString()}`,
-              body: 'Release notes here'
-            });
-            return response.data;
+          tag_name: ${{ steps.release_tag.outputs.tag }}
+          release_name: Release - ${{ steps.release_tag.outputs.tag }}
+          body: |
+            Automated release from workflow execution
+            
+            Generated files included in packages:
+            - iptv_list.txt (final merged IPTV list)
+            - unmatched_channels.txt
+            - config/ directory
+            - 地方频道/ (regional channels)
+            - 频道模板/ (channel templates)
+          draft: false
+          prerelease: false
 
-      - name: Upload release assets
+      - name: Upload ZIP to Release
+        if: hashFiles('release.zip') != ''
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: package.zip
-          asset_name: package.zip
+          asset_path: ./release.zip
+          asset_name: release.zip
           asset_content_type: application/zip
 
-      - name: Upload release assets
+      - name: Upload TAR.GZ to Release
+        if: hashFiles('release.tar.gz') != ''
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: package.tar.gz
-          asset_name: package.tar.gz
+          asset_path: ./release.tar.gz
+          asset_name: release.tar.gz
           asset_content_type: application/gzip
 
+      - name: Upload as GitHub Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ steps.release_tag.outputs.tag }}
+          path: |
+            release.zip
+            release.tar.gz
+          retention-days: 30
