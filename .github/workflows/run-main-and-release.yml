@@ -21,16 +21,18 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          sudo apt-get install -y ffmpeg zip
+
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
       - name: Create 频道模板 directory and populate template files
         run: |
-          mkdir -p '频道模板'
+          mkdir -p 频道模板
 
-          cat > '频道模板/CCTV.txt' << 'EOF'
+          cat > 频道模板/CCTV.txt <<EOF
           CCTV-1
           CCTV-2
           CCTV-3
@@ -54,7 +56,7 @@ jobs:
           CCTV-4美洲
           EOF
 
-          cat > '频道模板/主流卫视.txt' << 'EOF'
+          cat > 频道模板/主流卫视.txt <<EOF
           湖南卫视
           浙江卫视
           江苏卫视
@@ -88,99 +90,40 @@ jobs:
           西藏卫视
           EOF
 
-          cat > '频道模板/地方频道.txt' << 'EOF'
-          北京新闻
-          北京影视
-          北京生活
-          上海新闻综合
-          上海都市
-          上海纪实
-          广东珠江
-          广东体育
-          广东新闻
-          深圳都市
-          深圳财经
-          深圳娱乐
-          湖南经视
-          湖南都市
-          湖南电影
-          浙江钱江
-          浙江经济生活
-          江苏城市
-          江苏综艺
-          山东齐鲁
-          山东体育
-          湖北经视
-          湖北综合
-          四川经济
-          重庆新闻
-          天津都市
-          辽宁都市
-          黑龙江都市
-          河南都市
-          江西都市
-          EOF
-
       - name: Run main.py
         run: python main.py
 
-      - name: List generated files
-        run: |
-          echo "=== Files in root ===" 
-          ls -lah *.txt 2>/dev/null || echo "No .txt files"
-          echo "=== Directories ===" 
-          ls -la | grep "^d" || echo "No directories"
-      - name: Create temporary release tag
-        id: release_tag
-        run: |
-          TAG="release-$(date +%Y%m%d-%H%M%S)"
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "Created tag: $TAG"
-      - name: Package files for ZIP
-        continue-on-error: true
+      - name: Package output files
         run: |
           mkdir -p release_output
-          cp -f iptv_list.txt release_output/ 2>/dev/null || echo "iptv_list.txt not found"
-          cp -f unmatched_channels.txt release_output/ 2>/dev/null || echo "unmatched_channels.txt not found"
-          cp -rf config release_output/ 2>/dev/null || echo "config directory not found"
-          cp -rf 地方频道 release_output/ 2>/dev/null || echo "地方频道 directory not found"
-          cp -rf 频道模板 release_output/ 2>/dev/null || echo "频道模板 directory not found"
+          cp -f iptv_list.txt release_output/ 2>/dev/null || true
+          cp -f unmatched_channels.txt release_output/ 2>/dev/null || true
+          cp -rf config release_output/ 2>/dev/null || true
+          cp -rf 地方频道 release_output/ 2>/dev/null || true
+          cp -rf 频道模板 release_output/
+
           cd release_output
           zip -r ../release.zip . -q
           cd ..
-          echo "ZIP package created: $(ls -lh release.zip | awk '{print $5}')"
-      - name: Package files for TAR.GZ
-        continue-on-error: true
-        run: |
-          mkdir -p release_output_tar
-          cp -f iptv_list.txt release_output_tar/ 2>/dev/null || echo "iptv_list.txt not found"
-          cp -f unmatched_channels.txt release_output_tar/ 2>/dev/null || echo "unmatched_channels.txt not found"
-          cp -rf config release_output_tar/ 2>/dev/null || echo "config directory not found"
-          cp -rf 地方频道 release_output_tar/ 2>/dev/null || echo "地方频道 directory not found"
-          cp -rf 频道模板 release_output_tar/ 2>/dev/null || echo "频道模板 directory not found"
-          tar -czf release.tar.gz -C release_output_tar . 2>/dev/null
-          echo "TAR.GZ package created: $(ls -lh release.tar.gz | awk '{print $5}')"
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
+          tar -czf release.tar.gz -C release_output .
+
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: release-${{ github.run_number }}
+          name: Release - ${{ github.run_number }}
+          body: |
+            Automated release from workflow execution.
+
+            Included:
+            - iptv_list.txt
+            - unmatched_channels.txt
+            - config/
+            - 地方频道/
+            - 频道模板/
+
+          files: |
+            release.zip
+            release.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.release_tag.outputs.tag }}
-          release_name: Release - ${{ steps.release_tag.outputs.tag }}
-          body: |
-            Automated release from workflow execution
-            
-            Generated files included in packages:
-            - iptv_list.txt (final merged IPTV list)
-            - unmatched_channels.txt
-            - config/ directory
-            - 地方频道/ (regional channels)
-            - 频道模板/ (channel templates)
-          draft: false
-          prerelease: false
-
-      - name: Upload ZIP to Release
-        if: hashFiles('release.zip') != ''
-        uses: actions/upload-release-asset@v1
-        
