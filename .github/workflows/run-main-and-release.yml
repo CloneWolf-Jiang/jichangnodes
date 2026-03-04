@@ -1,1 +1,67 @@
-name: Run and Release\n\non: workflow_dispatch\n\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Checkout code\n        uses: actions/checkout@v2\n      - name: Install dependencies\n        run: |\n          sudo apt-get update\n          sudo apt-get install -y ffmpeg\n          pip install -r requirements.txt\n      - name: Run main.py\n        run: python main.py\n      - name: Package output files\n        run: |\n          zip -r output.zip output_directory/\n          tar -czvf output.tar.gz output_directory/\n      - name: Create Release\n        uses: actions/create-release@v1\n        env:\n          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n        with:\n          tag_name: v1.0.0\n          release_name: Release v1.0.0\n          draft: false\n          prerelease: false\n      - name: Upload Release Assets\n        uses: actions/upload-release-asset@v1\n        env:\n          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n        with:\n          upload_url: ${{ github.event.release.upload_url }}\n          asset_path: ./output.zip\n          asset_name: output.zip\n          asset_content_type: application/zip\n      - name: Upload Release Assets (tar.gz)\n        uses: actions/upload-release-asset@v1\n        env:\n          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n        with:\n          upload_url: ${{ github.event.release.upload_url }}\n          asset_path: ./output.tar.gz\n          asset_name: output.tar.gz\n          asset_content_type: application/gzip\n
+name: CI Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run main.py
+        run: |
+          python main.py
+
+      - name: Create package
+        run: |
+          mkdir output
+          cp IPTV_list.txt output/
+          cp "地方频道" output/
+          cp "频道模板" output/
+          cp config output/
+          cp unmatched_channels.txt output/
+          tar -cvf package.tar.gz output/
+          zip -r package.zip output/
+
+      - name: Create Release
+        id: create_release
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const response = await github.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: `release-${new Date().toISOString().split('T')[0]}`,
+              name: `Release - ${new Date().toISOString()}`,
+              body: 'Release notes here'
+            });
+            return response.data;
+
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: package.zip
+          asset_name: package.zip
+          asset_content_type: application/zip
+
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: package.tar.gz
+          asset_name: package.tar.gz
+          asset_content_type: application/gzip
+
