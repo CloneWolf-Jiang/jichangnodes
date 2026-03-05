@@ -1,1 +1,95 @@
+name: Extract WASM & generate WAT
 
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "手动触发请在此输入 I approve 以确认执行（区分大小写）"
+        required: true
+
+jobs:
+  extract:
+    name: Extract base64 WASM and produce WAT
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify manual approval (if workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Approval input: '${{ github.event.inputs.confirm }}'"
+          if [ "${{ github.event.inputs.confirm }}" != "I approve" ]; then
+            echo "Manual approval not provided or incorrect. To proceed, trigger workflow_dispatch and set confirm = 'I approve'."
+            exit 1
+          fi
+
+      - name: Extract base64 blob and decode to wasm
+        id: extract
+        run: |
+          set -euo pipefail
+          SRC="h5.worker_patch.js"
+          OUTDIR="artifacts"
+          mkdir -p "$OUTDIR"
+          echo "Looking for base64 blob in $SRC ..."
+          if [ ! -f "$SRC" ]; then
+            echo "Source file $SRC not found in repo root."
+            exit 1
+          fi
+          # 从形如 wb="data:application/octet-stream;base64,AAA..." 中提取 base64 部分
+          B64=$(sed -n 's/.*wb="data:application\/octet-stream;base64,\([^"]*\)".*/\1/p' "$SRC" || true)
+          if [ -z "$B64" ]; then
+            echo "No matching base64 data found in $SRC. Exiting."
+            exit 1
+          fi
+          # 去除可能的换行并写入文件
+          echo "$B64" | tr -d '\n' | base64 -d > "$OUTDIR/extracted.wasm"
+          echo "WASM written to $OUTDIR/extracted.wasm"
+          ls -lh "$OUTDIR/extracted.wasm" || true
+
+      - name: Ensure wabt (wasm2wat) is installed
+        run: |
+          set -euo pipefail
+          if command -v wasm2wat >/dev/null 2>&1; then
+            echo "wasm2wat already available"
+            wasm2wat --version || true
+            exit 0
+          fi
+          echo "wasm2wat not available; attempting apt-get install wabt (may require elevated permissions)."
+          sudo apt-get update -y || true
+          sudo apt-get install -y wabt || true
+          if command -v wasm2wat >/dev/null 2>&1; then
+            echo "wasm2wat installed successfully"
+            wasm2wat --version || true
+          else
+            echo "wasm2wat still not available. The workflow will continue but WAT conversion will be skipped."
+          fi
+
+      - name: Convert WASM to WAT (if wasm2wat present)
+        run: |
+          set -euo pipefail
+          OUTDIR="artifacts"
+          WASM="$OUTDIR/extracted.wasm"
+          WAT="$OUTDIR/extracted.wat"
+          if [ ! -f "$WASM" ]; then
+            echo "$WASM not found, skipping conversion."
+            exit 1
+          fi
+          if command -v wasm2wat >/dev/null 2>&1; then
+            echo "Converting $WASM -> $WAT"
+            wasm2wat "$WASM" -o "$WAT"
+            echo "WAT produced: $WAT"
+            ls -lh "$WAT"
+          else
+            echo "wasm2wat not found, cannot convert WASM -> WAT in this runner."
+            echo "If you want WAT artifact, install wabt or provide a runner with wasm2wat available."
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: extracted-wasm-and-wat
+          path: artifacts
