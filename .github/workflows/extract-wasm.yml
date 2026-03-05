@@ -28,7 +28,7 @@ jobs:
         id: extract
         run: |
           set -euo pipefail
-          SRC="h5.worker_patch.js"
+          SRC="tools/ttt/h5.worker_patch.js"
           OUTDIR="artifacts"
           mkdir -p "$OUTDIR"
           echo "Looking for base64 blob in $SRC ..."
