@@ -55,8 +55,8 @@ proxy-groups:
   - 🛩️ ‍墙内
   - 💩 ‍广告
 proxies:
-- {name: ℹ️ 输入网址时请加上https:// - 三番云, server: google.com, port: 8888, type: vmess, uuid: 05720464-f89b-4974-950d-d051eff064c2, alterId: 0, cipher: auto, tls: false, skip-cert-verify: true, network: ws, ws-opts: {path: /, headers: {Host: google.com}}, udp: true}
-- {name: ℹ️ 请续费：https://mains.3fan4.net - 三番云, server: google.com, port: 8888, type: vmess, uuid: 05720464-f89b-4974-950d-d051eff064c2, alterId: 0, cipher: auto, tls: false, skip-cert-verify: true, network: ws, ws-opts: {path: /, headers: {Host: google.com}}, udp: true}
+- {name: ℹ️ 输入网址时请加上https:// - 三番云, server: google.com, port: 8888, type: vmess, uuid: d57e9ef1-9352-4c79-83c6-fd60f069a11a, alterId: 0, cipher: auto, tls: false, skip-cert-verify: true, network: ws, ws-opts: {path: /, headers: {Host: google.com}}, udp: true}
+- {name: ℹ️ 请续费：https://mains.3fan4.net - 三番云, server: google.com, port: 8888, type: vmess, uuid: d57e9ef1-9352-4c79-83c6-fd60f069a11a, alterId: 0, cipher: auto, tls: false, skip-cert-verify: true, network: ws, ws-opts: {path: /, headers: {Host: google.com}}, udp: true}
 rules:
 - DOMAIN-SUFFIX,acl4.ssr,DIRECT
 - DOMAIN-SUFFIX,ip6-localhost,DIRECT
