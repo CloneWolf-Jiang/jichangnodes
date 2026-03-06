@@ -1,5 +1,5 @@
 %YAML 1.1
 ---
 proxies:
-- {name: ℹ️ 输入网址时请加上https:// - 三番云, server: google.com, port: 8888, type: vmess, uuid: 331eaef6-553c-411c-9c9b-c28c02fc99d0, alterId: 0, cipher: auto, tls: false, skip-cert-verify: true, network: ws, ws-opts: {path: /, headers: {Host: google.com}}, udp: true}
-- {name: ℹ️ 请续费：https://mains.3fan4.net - 三番云, server: google.com, port: 8888, type: vmess, uuid: 331eaef6-553c-411c-9c9b-c28c02fc99d0, alterId: 0, cipher: auto, tls: false, skip-cert-verify: true, network: ws, ws-opts: {path: /, headers: {Host: google.com}}, udp: true}
+- {name: ℹ️ 输入网址时请加上https:// - 三番云, server: google.com, port: 8888, type: vmess, uuid: b5051d76-7a91-4b72-965d-018430591b88, alterId: 0, cipher: auto, tls: false, skip-cert-verify: true, network: ws, ws-opts: {path: /, headers: {Host: google.com}}, udp: true}
+- {name: ℹ️ 请续费：https://mains.3fan4.net - 三番云, server: google.com, port: 8888, type: vmess, uuid: b5051d76-7a91-4b72-965d-018430591b88, alterId: 0, cipher: auto, tls: false, skip-cert-verify: true, network: ws, ws-opts: {path: /, headers: {Host: google.com}}, udp: true}
