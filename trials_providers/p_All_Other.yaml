@@ -1,7 +1,7 @@
 %YAML 1.1
 ---
 proxies:
-- {name: ⛔اشتراک را تمدید کنید⛔ - multi, server: empty.node, port: 443, type: trojan, password: a5e3dc1d-ccf3-44ae-8f9c-135c6e7a0509, sni: empty.node, skip-cert-verify: true, udp: true}
-- {name: ⛔اشتراک منقضی شده است⛔ - multi, server: empty.node, port: 443, type: trojan, password: a5e3dc1d-ccf3-44ae-8f9c-135c6e7a0509, sni: empty.node, skip-cert-verify: true, udp: true}
-- {name: ℹ️ 输入网址时请加上https:// - 三番云, server: google.com, port: 8888, type: vmess, uuid: 403ca174-b493-44df-ad24-64e8d6a2da47, alterId: 0, cipher: auto, tls: false, skip-cert-verify: true, network: ws, ws-opts: {path: /, headers: {Host: google.com}}, udp: true}
-- {name: ℹ️ 请续费：https://mains.3fan4.net - 三番云, server: google.com, port: 8888, type: vmess, uuid: 403ca174-b493-44df-ad24-64e8d6a2da47, alterId: 0, cipher: auto, tls: false, skip-cert-verify: true, network: ws, ws-opts: {path: /, headers: {Host: google.com}}, udp: true}
+- {name: ⛔اشتراک را تمدید کنید⛔ - multi, server: empty.node, port: 443, type: trojan, password: a4f372df-7ec9-40e1-995d-a96e34925991, sni: empty.node, skip-cert-verify: true, udp: true}
+- {name: ⛔اشتراک منقضی شده است⛔ - multi, server: empty.node, port: 443, type: trojan, password: a4f372df-7ec9-40e1-995d-a96e34925991, sni: empty.node, skip-cert-verify: true, udp: true}
+- {name: ℹ️ 输入网址时请加上https:// - 三番云, server: google.com, port: 8888, type: vmess, uuid: 56c3350d-9fe2-4980-b6a1-a716d0421f3e, alterId: 0, cipher: auto, tls: false, skip-cert-verify: true, network: ws, ws-opts: {path: /, headers: {Host: google.com}}, udp: true}
+- {name: ℹ️ 请续费：https://mains.3fan4.net - 三番云, server: google.com, port: 8888, type: vmess, uuid: 56c3350d-9fe2-4980-b6a1-a716d0421f3e, alterId: 0, cipher: auto, tls: false, skip-cert-verify: true, network: ws, ws-opts: {path: /, headers: {Host: google.com}}, udp: true}
